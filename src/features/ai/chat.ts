@@ -1,20 +1,17 @@
 "use server";
 
 import { Conversation } from "@/app/types/ai";
-import { ENVIRONMENT } from "@/config/environment";
-import { GoogleGenAI } from "@google/genai";
-
-const ai = new GoogleGenAI({
-  apiKey: ENVIRONMENT.googleGenAIKey,
-});
+import z from "zod";
+import { createAI } from "./instance";
 
 export async function handleChat(
   conversation: Conversation[],
   isThinking: boolean,
 ) {
   console.log(isThinking);
+  const ai = createAI();
   const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
+    model: "gemini-3.5-flash",
     contents: [...conversation],
     config: {
       thinkingConfig: {
@@ -54,8 +51,9 @@ export async function* handleChatStreaming(
   isThinking: boolean,
 ) {
   console.log(isThinking);
+  const ai = createAI();
   const response = await ai.models.generateContentStream({
-    model: "gemini-3-flash-preview",
+    model: "gemini-3.5-flash",
     contents: [...conversation],
     config: {
       thinkingConfig: {
@@ -78,6 +76,13 @@ export async function* handleChatStreaming(
       - Jawab dengan bahasa indonesia yang santai, sopan namun tetap profesional.
       - Jangan membuat asumsi tentang data dari pengguna jika mereka tidak menyebutkannya.
       - Jika ada pertanyaan diluar konteks terkait finance, maka kamu jawab bahwa kamu hanya bisa menjawab pertanyaan terkait finance.
+
+      [Workflow Step]
+      - Langkah 1 (Information Extraction): Identifikasi pengguna, tanyakan usia, penghasilan / budget, tujuan keuangannya
+      - Langkah 2 (Thought): Analisis masalah utama pengguna dan data apa yang kurang.
+      - Langkah 3 (Action): Tentukan formula yang harus dijalankan.
+      - Langkah 4 (Evaluation): Periksa kembali hasil dari action.
+      - Langkah 5 (Response Generation): Keluarkan jawaban akhir ke pengguna.
 
       [Response Format]
       Struktur jawaban kamu harus seperti ini:
@@ -136,4 +141,66 @@ export async function* handleChatStreaming(
       }
     }
   }
+}
+
+const transactionSchema = z.object({
+  amount: z.number().default(0).describe("Transaction nominal"),
+  type: z.enum(["income", "expense"]).describe("Type of transaction"),
+  category: z
+    .enum([
+      "Food & Drink",
+      "Shopping",
+      "Housing",
+      "Transportation",
+      "Entertainment",
+      "Salary",
+      "Others",
+    ])
+    .describe("Category of transaction"),
+  description: z.string().describe("Short text for describing transaction "),
+  date: z.string().describe("the date in YYYY-MM-DD format"),
+});
+
+export async function handleWizardInput(message: string) {
+  const contents = `
+  <role>
+    You are an AI Wizard finance assistant, who can extract transaction details from text
+  </role>
+  <instruction>
+  Extract the transaction details from the following text and return it as structure JSON object.
+  The JSON object must have exactly these fields:
+  - "amount": a number representing the cost (positive). Use 0 if not provided
+  - "type": type of transaction, either 'income' or 'expense'.
+  - "category": choose the most appropriate category from this exact list:
+                "Food & Drink","Shopping","Housing","Transportation","Entertainment","Salary","Others".
+  - "description": a short string describing the transaction, first letter capitalized.
+  - "date": date of transaction in YYYY-MM-DD format.
+            Assume the current date if relative terms like 'today' or 'just now'. If not define use current date.
+  </instruction>
+  <context>
+    Current Date: ${new Date().toISOString()}
+  </context>
+  <input>
+    Text to extract: ${message}
+  </input>
+  <outputFormat>
+    Respond with only the raw JSON object, no markdown blocks, no text before or after.
+  </outputFormat>
+  ${message}`;
+
+  const ai = createAI();
+  const response = await ai.models.generateContent({
+    model: "gemini-3.5-flash",
+    contents,
+    config: {
+      responseMimeType: "application/json",
+      responseSchema: z.toJSONSchema(transactionSchema),
+    },
+  });
+
+  const transaction = transactionSchema.parse(JSON.parse(`${response.text}`));
+  if (transaction.amount <= 0) {
+    throw new Error("Cannot create transaction with invalid amount");
+  }
+  return transaction;
 }
