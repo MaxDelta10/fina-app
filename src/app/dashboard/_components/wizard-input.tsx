@@ -32,10 +32,9 @@ export default function WizardInput({ refetch }: { refetch: () => void }) {
       if (!aiResponse) {
         throw new Error("Failed to process AI input");
       }
-
       return createTransaction(aiResponse);
     },
-    onSuccess: (response) => {
+    onSuccess: () => {
       toast.success("Transaction created successfully!");
       refetch();
       form.reset();
