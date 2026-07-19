@@ -1,6 +1,9 @@
 "use server";
 
+import { Conversation } from "@/app/types/ai";
 import { createAI } from "./instance";
+import { createClient } from "@supabase/supabase-js";
+import { Transaction } from "@/app/types/transaction";
 
 export async function generateEmbedding(contents: string) {
   const ai = createAI();
@@ -26,3 +29,5 @@ export async function generateEmbedding(contents: string) {
     throw error;
   }
 }
+
+
