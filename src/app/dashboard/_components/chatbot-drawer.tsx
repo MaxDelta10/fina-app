@@ -29,7 +29,7 @@ export default function ChatbotDrawer() {
   const chatRef = useRef<HTMLDivElement>(null);
   const [conversation, setConversation] = useState<Conversation[]>([]);
   const [isThinking, setIsThinking] = useState<boolean>(false);
-  const [mode, setMode] = useState<'general'|'personal'>('general');
+  const [mode, setMode] = useState<"general" | "personal">("general");
 
   const { mutate: handleChatMutation, isPending } = useMutation({
     mutationFn: async ({ isThinking }: { isThinking: boolean }) => {
@@ -38,7 +38,11 @@ export default function ChatbotDrawer() {
           ...prev,
           { role: "model", parts: [{ thought: true, text: "" }, { text: "" }] },
         ]);
-        const response = await handleChatStreaming(conversation, isThinking, mode);
+        const response = await handleChatStreaming(
+          conversation,
+          isThinking,
+          mode,
+        );
         for await (const chunk of response) {
           setConversation((prev) => {
             const newConversation = [...prev];
@@ -71,7 +75,11 @@ export default function ChatbotDrawer() {
           ...prev,
           { role: "model", parts: [{ text: "" }] },
         ]);
-        const response = await handleChatStreaming(conversation, isThinking, mode);
+        const response = await handleChatStreaming(
+          conversation,
+          isThinking,
+          mode,
+        );
         for await (const chunk of response) {
           setConversation((prev) => {
             const newConversation = [...prev];
@@ -202,7 +210,7 @@ export default function ChatbotDrawer() {
                 </div>
               ))}
               {isPending && (
-                <div className="flex items-center animate-pulse">
+                <div className="flex items-center animate-pulse -mt-8">
                   <EllipsisIcon className="size-8 text-primary/50" />
                 </div>
               )}

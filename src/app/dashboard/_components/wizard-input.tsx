@@ -1,40 +1,42 @@
-"use client";
+'use client';
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Field } from "@/components/ui/field";
-import { handleWizardInput, handleWizardTools } from "@/features/ai/wizard";;
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
-import { Loader2Icon, SendIcon, SparklesIcon } from "lucide-react";
-import { KeyboardEvent } from "react";
-import { Controller, useForm } from "react-hook-form";
-import { toast } from "sonner";
-import z from "zod";
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Field } from '@/components/ui/field';
+import { handleWizardInput, handleWizardTools } from '@/features/ai/wizard';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useMutation } from '@tanstack/react-query';
+import { Loader2Icon, SendIcon, SparklesIcon } from 'lucide-react';
+import { KeyboardEvent } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { toast } from 'sonner';
+import z from 'zod';
 
 const formSchema = z.object({
-  message: z.string().min(1, "Message is required"),
+  message: z.string().min(1, 'Message is required'),
 });
 
 export default function WizardInput({ refetch }: { refetch: () => void }) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      message: "",
+      message: '',
     },
   });
 
   const { mutate, isPending } = useMutation({
     mutationFn: handleWizardTools,
-    onSuccess: () => {
-      toast.success("Transaction created successfully!");
+    onSuccess: (response) => {
+      toast.success(response);
       refetch();
       form.reset();
     },
     onError: (error) => {
-      toast.error(error instanceof Error
-        ? error.message
-        : "Failed to process your request");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Failed to process your request',
+      );
     },
   });
 
@@ -43,7 +45,7 @@ export default function WizardInput({ refetch }: { refetch: () => void }) {
   }
 
   function handleKeyDown(e: KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       onSubmit(form.getValues());
     }

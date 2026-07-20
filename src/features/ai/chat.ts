@@ -1,11 +1,11 @@
-'use server';
+"use server";
 
-import { Conversation } from '@/app/types/ai';
-import { createAI } from './instance';
-import z from 'zod';
-import { createClient } from '@/lib/supabase/server';
-import { generateEmbedding } from './embedding';
-import { Transaction } from '@/app/types/transaction';
+import { Conversation } from "@/app/types/ai";
+import { createAI } from "./instance";
+import z from "zod";
+import { createClient } from "@/lib/supabase/server";
+import { findEmbedding, generateEmbedding } from "./embedding";
+import { Transaction } from "@/app/types/transaction";
 
 export async function handleChat(
   conversation: Conversation[],
@@ -13,7 +13,7 @@ export async function handleChat(
 ) {
   const ai = createAI();
   const response = await ai.models.generateContent({
-    model: 'gemini-3.5-flash',
+    model: "gemini-3.5-flash",
     contents: [...conversation],
     config: {
       thinkingConfig: {
@@ -23,8 +23,8 @@ export async function handleChat(
   });
 
   const result = {
-    thought: '',
-    answer: '',
+    thought: "",
+    answer: "",
   };
 
   if (isThinking) {
@@ -51,7 +51,7 @@ export async function handleChat(
 async function generalChat(conversation: Conversation[], isThinking?: boolean) {
   const ai = createAI();
   const response = await ai.models.generateContentStream({
-    model: 'gemini-3.5-flash',
+    model: "gemini-3.5-flash",
     contents: [...conversation],
     config: {
       thinkingConfig: {
@@ -114,7 +114,7 @@ async function generalChat(conversation: Conversation[], isThinking?: boolean) {
       topP: 0.1,
       // output control
       maxOutputTokens: 2048,
-      stopSequences: ['\n\n\n', '###', 'User:', 'Pengguna:'],
+      stopSequences: ["\n\n\n", "###", "User:", "Pengguna:"],
       // repetition penalties
       // presencePenalty: 1.5,
       // frequencyPenalty: 1.5,
@@ -131,31 +131,19 @@ async function personalizedChat(
 ) {
   const ai = createAI();
 
-  const supabase = await createClient();
+  const data = await findEmbedding(query);
 
-  const queryEmbedding = await generateEmbedding(query);
-
-  const { data, error } = await supabase.rpc('match_transactions', {
-    query_embedding: queryEmbedding,
-    match_threshold: 0.3,
-    match_count: 15,
-  });
-
-  if (error) {
-    throw new Error('Failed to perform vector search.');
-  }
-
-  let contextData = '';
+  let contextData = "";
 
   if (!data || data.length === 0) {
     contextData =
-      'No transactions found that are similar or relevant to the question';
+      "No transactions found that are similar or relevant to the question";
   } else {
     contextData = data
       .map((transaction: Transaction) => {
         return JSON.stringify(transaction);
       })
-      .join('\n');
+      .join("\n");
   }
 
   const prompt = `
@@ -183,10 +171,10 @@ async function personalizedChat(
   `;
 
   const response = await ai.models.generateContentStream({
-    model: 'gemini-3.5-flash',
+    model: "gemini-3.5-flash",
     contents: [
       ...(historyChat ?? []),
-      { role: 'user', parts: [{ text: prompt }] },
+      { role: "user", parts: [{ text: prompt }] },
     ],
     config: {
       thinkingConfig: {
@@ -201,10 +189,10 @@ async function personalizedChat(
 export async function* handleChatStreaming(
   conversation: Conversation[],
   isThinking: boolean,
-  mode: 'general' | 'personal',
+  mode: "general" | "personal",
 ) {
   let response;
-  if (mode === 'general') {
+  if (mode === "general") {
     response = await generalChat(conversation, isThinking);
   } else {
     response = await personalizedChat(
