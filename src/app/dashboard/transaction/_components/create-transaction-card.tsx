@@ -1,43 +1,44 @@
-import { Controller, useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import z from 'zod';
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import z from "zod";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
+} from "@/components/ui/card";
 import {
   Field,
   FieldError,
   FieldGroup,
   FieldLabel,
-} from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { DatePicker } from '@/components/ui/date-picker';
-import { format } from 'date-fns';
-import { useMutation } from '@tanstack/react-query';
-import { createTransaction } from '@/features/transaction/action';
-import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { DatePicker } from "@/components/ui/date-picker";
+import { format } from "date-fns";
+import { useMutation } from "@tanstack/react-query";
+import { createTransaction } from "@/features/transaction/action";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import FileDropzoneInput from "../../_components/file-dropzone-input";
 
 const formSchema = z.object({
-  amount: z.string().min(1, 'Amount is required'),
-  type: z.enum(['income', 'expense'], {
-    error: 'Type is required',
+  amount: z.string().min(1, "Amount is required"),
+  type: z.enum(["income", "expense"], {
+    error: "Type is required",
   }),
-  category: z.string().min(1, 'Category is required'),
-  date: z.string().min(1, 'Date is required'),
-  description: z.string().min(1, 'Description is required'),
+  category: z.string().min(1, "Category is required"),
+  date: z.string().min(1, "Date is required"),
+  description: z.string().min(1, "Description is required"),
 });
 
 export default function CreateTransactionCard({
@@ -48,11 +49,11 @@ export default function CreateTransactionCard({
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      amount: '',
-      type: 'income',
-      category: '',
-      date: '',
-      description: '',
+      amount: "",
+      type: "income",
+      category: "",
+      date: "",
+      description: "",
     },
   });
 
@@ -68,11 +69,11 @@ export default function CreateTransactionCard({
     onSuccess: () => {
       form.reset();
       refetch();
-      toast.success('Transaction created successfully!');
+      toast.success("Transaction created successfully!");
     },
     onError: (error) => {
       toast.error(
-        error instanceof Error ? error.message : 'Failed to create transaction',
+        error instanceof Error ? error.message : "Failed to create transaction",
       );
     },
   });
@@ -88,6 +89,9 @@ export default function CreateTransactionCard({
         <CardDescription>Add a new financial activity.</CardDescription>
       </CardHeader>
       <CardContent>
+        <div className="mb-4">
+          <FileDropzoneInput setValues={form.setValues} refetch={refetch} />
+        </div>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <FieldGroup className="gap-3">
             <Controller
@@ -170,7 +174,7 @@ export default function CreateTransactionCard({
                     id="form-date"
                     value={field.value ? new Date(field.value) : undefined}
                     onChange={(date) =>
-                      field.onChange(date ? format(date, 'yyyy-MM-dd') : '')
+                      field.onChange(date ? format(date, "yyyy-MM-dd") : "")
                     }
                   />
                   {fieldState.invalid && (
@@ -204,7 +208,7 @@ export default function CreateTransactionCard({
               type="submit"
               disabled={!form.formState.isValid || isPending}
             >
-              {isPending ? 'Creating...' : 'Create Transaction'}
+              {isPending ? "Creating..." : "Create Transaction"}
             </Button>
           </FieldGroup>
         </form>
