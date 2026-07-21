@@ -14,7 +14,7 @@ import {
   deleteTransactionDeclaration,
   getTransactionDeclaration,
   updateTransactionDeclaration,
-} from "./funtionTransaction";
+} from "./funtion-transaction";
 
 const transactionSchema = z.object({
   amount: z.number().default(0).describe("Transaction nominal"),
