@@ -13,8 +13,6 @@ export async function extractReceiptData(formData: FormData) {
   if (!file) {
     throw new Error("No file uploaded");
   }
-
-  console.log(file);
   const mimeType = file.type;
   const base64Data = Buffer.from(await file.arrayBuffer()).toString("base64");
   const ai = createAI();
@@ -22,6 +20,12 @@ export async function extractReceiptData(formData: FormData) {
     {
       role: "user",
       parts: [
+        {
+          inlineData: {
+            mimeType,
+            data: base64Data,
+          },
+        },
         {
           text: `
                 <role>
@@ -45,12 +49,6 @@ export async function extractReceiptData(formData: FormData) {
                     Respond with only the raw JSON object, no markdown blocks, no text before or after.
                 </outputFormat>
                 `,
-        },
-        {
-          inlineData: {
-            mimeType,
-            data: base64Data,
-          },
         },
       ],
     },
