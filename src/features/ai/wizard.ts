@@ -142,6 +142,8 @@ export async function handleWizardTools(formData: FormData) {
       },
     });
 
+    // console.log(response.usageMetadata);
+
     if (response.functionCalls && response.functionCalls.length > 0) {
       if (response.candidates && response.candidates[0]?.content) {
         contents.push(response.candidates[0].content);

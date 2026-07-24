@@ -3,7 +3,13 @@
 import { Conversation } from "@/app/types/ai";
 import { createAI } from "./instance";
 import { findEmbedding, generateEmbedding } from "./embedding";
-import { Content, FunctionCall, Part } from "@google/genai";
+import {
+  Content,
+  FunctionCall,
+  HarmBlockThreshold,
+  HarmCategory,
+  Part,
+} from "@google/genai";
 import { getTransactionDeclaration } from "./funtion-transaction";
 
 export async function handleChat(
@@ -221,6 +227,12 @@ export async function* handleChatStreaming(
           thinkingConfig: {
             includeThoughts: isThinking,
           },
+          safetySettings: [
+            {
+              category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+              threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+            },
+          ],
         },
       });
 
